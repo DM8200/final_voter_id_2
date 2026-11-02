@@ -1,0 +1,8 @@
+{
+  "name": "Gujarati Voter PDF to Master Excel",
+  "description": "Bulk electoral roll PDF extractor consolidating 1,000+ Gujarati voter PDFs into an accurate, downloadable Master Excel sheet.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,825 @@
+# FINAL PROJECT PROMPT: Gujarati Voter PDF to Master Excel Application
+
+Act as a senior full-stack developer, PDF-processing engineer, Gujarati-language data extraction specialist, and data-quality engineer.
+
+Build a complete, functional web application in Google AI Studio for extracting voter information from 1,000+ Gujarati electoral-roll PDF files and consolidating all extracted records into one accurate, downloadable Excel master sheet.
+
+This application will be used for real voter-list data analysis. Accuracy, complete record coverage, Gujarati-language output, source traceability, and reliable bulk processing are mandatory.
+
+Do not create a demo-only interface. Implement the real upload, PDF reading, data extraction, processing queue, error recovery, data review, and Excel export workflows.
+
+# 1. Primary Objective
+
+I have more than 1,000 PDF files containing voter information. Each PDF can contain several pages, and each page can contain multiple individual voter ID cards.
+
+I want to upload all these PDFs in one batch and generate one consolidated Excel file containing every voter extracted from every uploaded PDF.
+
+The application must:
+
+1. Accept multiple PDF files in one batch.
+2. Support large batches containing 1,000+ PDFs.
+3. Read every page of every uploaded PDF.
+4. Identify the individual voter cards on each page.
+5. Extract each voter into a separate Excel row.
+6. Read the Vibhag number and Vibhag name printed near the upper-left corner of the page.
+7. Extract the Bhag number from the appropriate heading.
+8. Extract the Ward number only when it is explicitly identifiable.
+9. Preserve the correct original PDF filename and page number for every voter.
+10. Store all voter information in Gujarati wherever the source provides Gujarati text.
+11. Combine records from every successfully processed PDF into one master worksheet.
+12. Allow manual corrections and verification before or after exporting.
+13. Generate a genuine, downloadable `.xlsx` file.
+14. Report missing information, uncertain readings, duplicate EPIC numbers, and processing failures instead of hiding them.
+
+**The main output must be one consolidated voter master worksheet, not separate voter-data worksheets for each PDF.**
+
+# 2. Mandatory Gujarati-Language Requirement
+
+This requirement is critical.
+
+The final Excel sheet must contain voter data in Gujarati script wherever the source PDF contains Gujarati text.
+
+Do not translate Gujarati voter data into English or transliterate Gujarati names into Roman letters.
+
+Examples:
+
+- Correct: `રાજકોટ પશ્ચિમ`
+- Incorrect: `Rajkot West`
+
+- Correct: `રમેશભાઈ પટેલ`
+- Incorrect: `Rameshbhai Patel`
+
+- Correct: `પિતાનું નામ`
+- Incorrect: `Father Name` as an extracted value
+
+- Correct: `પુરુષ`
+- Incorrect: `Male` as the translated value when the source displays the Gujarati gender label.
+
+Apply this rule to:
+
+- મતદારનું નામ
+- સંબંધીનું નામ
+- પિતાનું નામ
+- પતિનું નામ
+- માતાનું નામ
+- અન્ય સંબંધી
+- સંબંધનો પ્રકાર
+- વિભાગનું નામ
+- જાતિ / લિંગના મૂલ્યો
+- ચકાસણીની સ્થિતિ
+- સ્થિતિ અને ચેતવણીઓ
+- Other descriptive information extracted from the Gujarati source
+
+Do not translate, rewrite, or normalize Gujarati personal names based on assumptions. Preserve the original spelling shown on the voter card.
+
+If the source is genuinely unreadable, leave the affected field blank and add a Gujarati warning.
+
+Do not invent a Gujarati name merely to make the spreadsheet look complete.
+
+### Preserve Original Identifiers
+
+The following values must be preserved as printed rather than translated:
+
+- ઓળખપત્ર નંબર (EPIC No)
+- PDF ફાઇલનું મૂળ નામ, including its extension
+- Original serial number
+- House number
+- Other original identification codes
+
+Keep alphanumeric identifiers such as EPIC numbers unchanged. Preserve leading zeros, letters, and hyphens where present.
+
+Standard Excel numeric digits from 0–9 are acceptable for numeric fields to support reliable sorting and filtering. Gujarati text-based fields and descriptive values must remain in Gujarati.
+
+# 3. Upload Interface
+
+Create a professional, responsive interface with a clear upload workflow.
+
+Support:
+
+- Selecting multiple PDF files.
+- Dragging and dropping multiple PDFs.
+- Uploading a ZIP file containing multiple PDFs.
+- Selecting folders when supported by the browser.
+- Uploading additional files in later batches.
+- Displaying filenames, file sizes, and the number of selected files.
+- Removing selected files before processing.
+- Detecting unsupported file types.
+- Reporting damaged, password-protected, empty, or unreadable PDF files.
+- Displaying the total number of PDFs selected.
+
+When processing more than one batch, append the new results to the existing master dataset unless the user explicitly starts a new project.
+
+Do not silently overwrite previously extracted records.
+
+Provide a clear option to start a genuinely new project, with a confirmation before clearing existing project data.
+
+The application must preserve each file's original filename even if temporary internal filenames are used during processing.
+
+# 4. Required Processing Workflow
+
+Create the following clear workflow.
+
+## Step 1 — Upload PDF Files
+
+Allow the user to select or drag and drop multiple PDFs, or upload a ZIP archive.
+
+Display an upload summary before processing begins.
+
+## Step 2 — Inspect PDF Documents
+
+For each PDF:
+
+1. Read the original filename.
+2. Open the PDF using an appropriate PDF-processing library.
+3. Detect the actual number of pages.
+4. Inspect every page.
+5. Determine whether the page contains embedded selectable text or scanned/image-based content.
+6. Identify page-level election metadata.
+7. Detect individual voter-card regions.
+8. Extract every readable voter record.
+9. Record the original page number.
+10. Save the results into the master dataset.
+
+Do not assume that every page contains voter cards.
+
+Some pages may contain electoral-roll summaries, maps, polling-station details, photographs, or introductory information.
+
+Skip pages that contain no individual voter records, but record their processing outcome when useful.
+
+Do not generate fake voter rows from summary statistics, maps, or polling-station headings.
+
+## Step 3 — Gujarati Text Extraction
+
+Use this extraction strategy:
+
+1. First attempt to extract usable embedded PDF text using a suitable PDF-parsing library.
+2. If embedded text is unavailable, incomplete, or unreliable, render the relevant page or page region and use a Gujarati-capable visual text-recognition method.
+3. Use a suitable Gemini multimodal model for visual extraction when required.
+4. Identify individual voter cards from their visual boundaries and layout.
+5. Extract each card separately using a structured data schema.
+6. Validate the returned values before saving them.
+
+Do not assume that every Gujarati PDF contains selectable text.
+
+Do not require manual conversion of the PDFs before uploading them.
+
+For scanned documents, use the actual rendered page content rather than relying exclusively on embedded text.
+
+If page quality, handwriting, printing, or card boundaries prevent reliable extraction, mark the record or page for review.
+
+# 5. Vibhag Number, Vibhag Name, Bhag Number and Ward Number
+
+This is one of the most important parts of the application.
+
+Read the election metadata from the correct page heading, usually near the upper-left corner for Vibhag details and near the upper-right area for the Bhag heading.
+
+For example, my sample PDF displays a heading similar to:
+
+`વિધાનસભા મત વિભાગનો નંબર અને નામ : 69 - રાજકોટ પશ્ચિમ`
+
+Extract:
+
+- વિભાગ નંબર: `69`
+- વિભાગનું નામ: `રાજકોટ પશ્ચિમ`
+
+When the heading displays:
+
+`ભાગ નંબર : 1`
+
+Extract:
+
+- ભાગ નંબર: `1`
+
+These fields must never be confused.
+
+### Vibhag No
+
+Extract the number associated with the Assembly Vibhag heading.
+
+### Vibhag Name
+
+Extract the Gujarati Assembly Vibhag name exactly as printed.
+
+### Bhag No
+
+Extract the number explicitly associated with `ભાગ નંબર`.
+
+### Ward No
+
+Populate Ward No only when a ward number is explicitly available and its meaning is clear.
+
+Do not assume that the following fields are identical:
+
+- Vibhag No
+- Bhag No
+- Ward No
+- Polling station number
+- Individual voter serial number
+- Parliamentary constituency number
+
+If the page includes a parliamentary constituency heading, do not accidentally use that number as Vibhag No.
+
+### Metadata Inheritance
+
+If a later page within the same PDF does not repeat its Vibhag or Bhag heading, inherit the last confidently identified value only when the document's page sequence and layout support that conclusion.
+
+Flag inherited information for review.
+
+When a different heading appears, update the metadata accordingly.
+
+Always reset inherited metadata when starting a new PDF.
+
+Never carry Vibhag information from one PDF into another PDF merely because the files were uploaded together.
+
+If a field cannot be determined confidently, leave it blank and record the problem in Gujarati in the Flags column.
+
+# 6. Extract Every Individual Voter Card
+
+A single page can contain dozens of voter cards.
+
+For every page containing voter cards:
+
+- Identify all individual card boundaries.
+- Extract every visible voter card.
+- Create one separate record per voter.
+- Capture the voter's own serial number, not the row's position in the Excel sheet.
+- Keep each voter's data associated with the correct card.
+- Extract information from all relevant cards, including cards near the top, bottom, left, and right page edges.
+- Do not merge the information of adjacent voter cards.
+- Do not assign one person's name to another person's EPIC number.
+- Do not omit a card because one of its fields is missing.
+
+A PDF page with 30 voter cards should produce 30 voter records if all 30 cards are present.
+
+If some cards cannot be read, extract all other readable records and explicitly report the incomplete cards.
+
+Keep the original PDF filename and original 1-based PDF page number on every extracted record.
+
+# 7. Exact Master Excel Structure
+
+Create one primary worksheet named:
+
+`મતદાર માસ્ટર ડેટા`
+
+This worksheet must contain exactly the following 20 columns in the specified order.
+
+Use Gujarati-only column headings. Do not include English translations in the exported column headers.
+
+| ક્રમ | Excel Column Heading |
+|---:|---|
+| 1 | ક્રમ નંબર |
+| 2 | ઓળખપત્ર નંબર |
+| 3 | મતદારનું નામ |
+| 4 | સંબંધનો પ્રકાર |
+| 5 | સંબંધીનું નામ |
+| 6 | પિતાનું નામ |
+| 7 | પતિનું નામ |
+| 8 | માતાનું નામ |
+| 9 | અન્ય સંબંધી |
+| 10 | ઘર / મકાન નંબર |
+| 11 | ઉંમર |
+| 12 | જાતિ |
+| 13 | વિભાગ નંબર |
+| 14 | વિભાગનું નામ |
+| 15 | વોર્ડ નંબર |
+| 16 | ભાગ નંબર |
+| 17 | PDF ફાઇલનું નામ |
+| 18 | PDF પેજ નંબર |
+| 19 | ચકાસાયેલ |
+| 20 | સ્થિતિ / ચેતવણીઓ |
+
+Do not change the spelling, remove columns, reorder them, or add extraction-confidence columns to the main worksheet.
+
+One row must represent one voter card.
+
+All successfully extracted voter records from all uploaded PDFs must be appended to this same worksheet.
+
+Do not create a separate primary worksheet for each PDF, Vibhag, Bhag, or batch.
+
+An optional additional processing-log worksheet may be provided for operational errors, but it must never replace or split the single consolidated voter-data worksheet.
+
+# 8. Field-by-Field Extraction Rules
+
+Apply these rules to every voter record.
+
+### 1. ક્રમ નંબર
+
+Extract the individual voter serial number printed on the card.
+
+Do not substitute a generated Excel row number for the original voter serial number.
+
+If serial numbers repeat in different PDFs, retain the original values.
+
+### 2. ઓળખપત્ર નંબર
+
+Extract the complete EPIC number exactly as printed.
+
+Preserve original letters, digits, leading zeros, and separators where applicable.
+
+Treat EPIC numbers as text in Excel.
+
+Never invent a missing EPIC number.
+
+### 3. મતદારનું નામ
+
+Extract the complete voter name in Gujarati script as printed on the card.
+
+Do not translate or transliterate it into English.
+
+### 4. સંબંધનો પ્રકાર
+
+Extract the relationship label shown on the card, such as:
+
+- પિતાનું નામ
+- પતિનું નામ
+- માતાનું નામ
+- Other explicitly printed relationship labels in Gujarati
+
+Preserve the source's meaning.
+
+### 5. સંબંધીનું નામ
+
+Extract the name of the relative associated with the relationship label.
+
+Keep it in Gujarati script wherever the source provides Gujarati.
+
+### 6. પિતાનું નામ
+
+Populate this field when the card explicitly identifies the relative as the father.
+
+If the card identifies a different relationship, do not incorrectly place that relative's name in this field.
+
+### 7. પતિનું નામ
+
+Populate this field when the card explicitly identifies the relative as the husband.
+
+Do not infer a husband's name from another field.
+
+### 8. માતાનું નામ
+
+Populate this field only when the mother's name is explicitly available in the source.
+
+If unavailable, leave the field blank.
+
+### 9. અન્ય સંબંધી
+
+Use this field only for an explicitly identified relationship that does not belong in the specific father, husband, or mother fields.
+
+Do not repeat data in multiple relationship fields unnecessarily.
+
+### 10. ઘર / મકાન નંબર
+
+Extract the house number as printed.
+
+Preserve leading zeros and alphanumeric details where present.
+
+Do not assume that an absent house number is zero.
+
+### 11. ઉંમર
+
+Extract the stated age.
+
+Do not estimate age, infer a birth year, or calculate age from assumptions.
+
+### 12. જાતિ
+
+Use the user's requested column heading `જાતિ`.
+
+In this electoral-roll dataset, populate the field using the gender value explicitly shown on the voter card.
+
+Examples include `પુરુષ` and `સ્ત્રી` when supported by the source.
+
+Do not interpret this field as caste or invent a value.
+
+### 13. વિભાગ નંબર
+
+Extract the correct Vibhag number from the relevant Assembly Vibhag heading.
+
+### 14. વિભાગનું નામ
+
+Extract the correct Gujarati Vibhag name from the relevant heading.
+
+### 15. વોર્ડ નંબર
+
+Extract only an explicitly identifiable Ward number.
+
+Never substitute the Vibhag number or Bhag number.
+
+### 16. ભાગ નંબર
+
+Extract the explicit Bhag number from the relevant heading.
+
+### 17. PDF ફાઇલનું નામ
+
+Store the original PDF filename, including its extension.
+
+Do not replace it with an internal temporary filename.
+
+### 18. PDF પેજ નંબર
+
+Record the original PDF page number using 1-based numbering.
+
+For example, the third page must be recorded as `3`, not `0`, `2`, or an internal processing index.
+
+### 19. ચકાસાયેલ
+
+Every newly extracted record must initially show:
+
+`ચકાસવાનું`
+
+After a person checks the record against the original source, allow its status to be changed to:
+
+`ચકાસેલ`
+
+If information requires further investigation, allow:
+
+`ચકાસણી જરૂરી`
+
+Never mark AI-extracted records as human-verified automatically.
+
+### 20. સ્થિતિ / ચેતવણીઓ
+
+Use Gujarati descriptions for warnings.
+
+Examples:
+
+- `ઓળખપત્ર નંબર ઉપલબ્ધ નથી`
+- `ઓળખપત્ર નંબર અસ્પષ્ટ છે`
+- `મતદારનું નામ વાંચવામાં મુશ્કેલી`
+- `ક્રમ નંબર ઉપલબ્ધ નથી`
+- `વિભાગની વિગતો ઉપલબ્ધ નથી`
+- `વિભાગની વિગતો અગાઉના પેજ પરથી લેવામાં આવી છે`
+- `ભાગ નંબર મળ્યો નથી`
+- `વોર્ડ નંબર મળ્યો નથી`
+- `સંભવિત ડુપ્લિકેટ ઓળખપત્ર નંબર`
+- `આંશિક માહિતી જ કાઢી શકાય છે`
+- `પેજ વાંચવામાં ભૂલ આવી`
+- `ચકાસણી જરૂરી`
+
+Multiple applicable warnings may be included in the same cell, separated by a readable delimiter such as a semicolon.
+
+Warnings must be understandable in Gujarati.
+
+The final Excel file must not expose internal English error codes in place of the Gujarati warnings.
+
+# 9. Missing, Uncertain and Duplicate Information
+
+Accuracy is more important than filling every cell.
+
+Implement the following rules:
+
+- Never fabricate a name, age, gender, EPIC number, relationship, Vibhag number, Bhag number, Ward number, or house number.
+- Leave genuinely missing fields blank.
+- Flag uncertain values instead of guessing.
+- Keep the other readable information when one field cannot be extracted.
+- Do not discard an otherwise useful voter record because a field is missing.
+- Do not silently remove duplicate-looking records.
+- Use matching EPIC numbers to identify possible duplicates when both values are sufficiently reliable.
+- Do not compare serial numbers alone to identify duplicates.
+- Do not automatically merge records merely because the names are similar.
+- Keep records from different files traceable to their original sources.
+
+If an EPIC number appears in multiple PDFs, flag the records for review. Preserve all original source records unless the user explicitly decides how to handle them.
+
+If duplicate records are identified during retries or resumed processing of the same page, do not append the same source record twice.
+
+An internal extraction-confidence score may be used to decide which records require review, but do not add a new column to the 20-column master worksheet.
+
+# 10. Bulk Processing for 1,000+ PDFs
+
+Build a real, queue-based processing system.
+
+Do not attempt to load all 1,000+ PDFs and every rendered page into memory simultaneously.
+
+Do not send the entire collection in a single Gemini request.
+
+Use controlled, bounded processing that respects file sizes, available memory, API quotas, model request limits, and timeouts.
+
+Process manageable page batches and commit their validated records to persistent project storage before continuing.
+
+Display a live processing dashboard containing:
+
+- Total PDFs uploaded.
+- PDFs completed.
+- PDFs currently processing.
+- PDFs failed.
+- Total pages discovered.
+- Pages processed.
+- Pages remaining.
+- Total voter records extracted.
+- Records requiring review.
+- Possible duplicate records.
+- Current PDF filename.
+- Current page number.
+- Overall completion percentage.
+
+Provide functional controls for:
+
+- શરૂ કરો
+- રોકો / વિરામ
+- ફરી શરૂ કરો
+- નિષ્ફળ પેજ ફરીથી પ્રોસેસ કરો
+
+A stop or pause action must preserve completed work.
+
+When processing resumes, continue from saved checkpoints wherever possible.
+
+Do not generate duplicate records when restarting the application or retrying pages.
+
+Do not report 100% completion until all queued processing tasks have reached a recorded final status.
+
+If a file or page cannot be processed, preserve a useful error record and continue with other files whenever possible.
+
+Do not silently abandon the remaining PDFs after the first error.
+
+If platform, storage, or API limits prevent processing the entire batch in one session, clearly report the limitation and preserve completed work so the remaining files can be processed in subsequent batches.
+
+# 11. Search, Filters and Manual Corrections
+
+Provide a searchable master-data preview.
+
+Allow the user to:
+
+- Search by Gujarati voter name.
+- Search by EPIC number.
+- Filter by વિભાગ નંબર.
+- Filter by વિભાગનું નામ.
+- Filter by ભાગ નંબર.
+- Filter by વોર્ડ નંબર.
+- Filter by PDF file name.
+- Filter by page number.
+- Filter by verification status.
+- Filter by warnings.
+- Show only incomplete or uncertain records.
+- Show possible duplicate records.
+- Edit individual field values.
+- Save manual corrections.
+- Mark a record as verified after human review.
+- View the original PDF page associated with a voter, when supported.
+- See the total number of extracted voter records before exporting.
+
+All edits must be applied to the master dataset and reflected in the downloaded Excel file.
+
+Do not discard manual corrections during processing retries, resume operations, or additional uploads.
+
+# 12. Actual Excel Export
+
+Provide a prominent button:
+
+`માસ્ટર એક્સેલ ડાઉનલોડ કરો (.xlsx)`
+
+Generate a real Excel workbook that can be opened in Microsoft Excel and compatible spreadsheet software.
+
+The exported workbook must contain one primary worksheet named:
+
+`મતદાર માસ્ટર ડેટા`
+
+It must contain the exact 20 Gujarati column headings and the correct order specified in this prompt.
+
+The file must include all successfully extracted records from all successfully processed PDFs, including records with incomplete fields and review warnings.
+
+Excel export requirements:
+
+- Preserve Gujarati Unicode characters correctly.
+- Use readable Gujarati-compatible font settings where practical.
+- Use Gujarati-only column headings.
+- Keep voter names and relationship names in Gujarati script.
+- Preserve original EPIC numbers and filenames.
+- Preserve house numbers and leading zeros.
+- Keep the original PDF page number for every record.
+- Include the correct Vibhag and Bhag metadata.
+- Include missing-data warnings.
+- Include the correct human-verification status.
+- Use one row per voter.
+- Enable column filters.
+- Freeze the header row.
+- Set sensible column widths.
+- Keep the dataset in an ordinary rectangular table.
+- Do not merge data cells.
+- Do not truncate records because of file size or processing limits.
+- Include manual edits in the final export.
+- Do not substitute a CSV file renamed with an `.xlsx` extension.
+
+For large datasets, generate the Excel file using an appropriate server-side or streaming-capable spreadsheet library.
+
+If an export fails, display the actual error and allow the user to retry without repeating successful PDF extraction.
+
+Optional: Add a separate worksheet named `પ્રક્રિયા અહેવાલ` containing processing failures, unreadable pages, and file-level diagnostics. This worksheet must not change the structure of the primary voter-data worksheet.
+
+# 13. Checkpointing, Recovery and Persistence
+
+Implement safe recovery for long-running jobs.
+
+Save:
+
+- Uploaded-file metadata.
+- Processing status.
+- Discovered page counts.
+- Completed page checkpoints.
+- Extracted voter records.
+- Failed page references.
+- Retry counts.
+- Manual corrections.
+- Verification status.
+
+Use persistent storage appropriate to the deployed application. IndexedDB may be used for local browser-side recovery where appropriate, but large jobs must not depend entirely on volatile browser memory.
+
+Where backend storage or authentication is required, implement it explicitly and document any setup needed.
+
+Do not claim that browser-refresh recovery is implemented unless the application actually restores the saved state.
+
+If the user closes or refreshes the page, make the best supported recovery possible without creating duplicate records.
+
+# 14. Technical Architecture
+
+Build the actual frontend and the required processing backend.
+
+Use suitable technologies for:
+
+- PDF inspection.
+- PDF text extraction.
+- Page rendering.
+- Gujarati-language visual recognition.
+- Gemini multimodal extraction when necessary.
+- Structured JSON validation.
+- Persistent processing queues.
+- Reliable Excel workbook creation.
+
+Use a structured extraction schema for each voter record and validate the response before committing it to the dataset.
+
+The schema must contain the fields required by the 20-column master worksheet and the original source metadata.
+
+Do not rely on unvalidated, free-form AI responses to generate the workbook.
+
+Implement appropriate handling for:
+
+- API request limits.
+- Timeouts.
+- Network interruption.
+- Malformed JSON.
+- Partial model responses.
+- Unreadable PDFs.
+- Unreadable pages.
+- Large file sizes.
+- Excel generation failures.
+- Duplicate processing tasks.
+
+Keep secret keys on the server side or in supported environment secrets.
+
+Never embed Gemini API keys in client-side code.
+
+Do not use fake data or hardcoded successful extraction responses.
+
+Do not silently replace real extraction logic with a mock implementation.
+
+Do not expose voter information unnecessarily through logs, public URLs, or unrelated external databases.
+
+Explain when document pages or extracted information must be sent to an external AI service for processing. Provide appropriate safeguards for this personal information and avoid unnecessary permanent retention.
+
+Keep the application modular so that the extraction engine can be improved without rebuilding unrelated working components.
+
+# 15. Mandatory Acceptance Tests Using My Actual Sample PDF
+
+Use the sample file:
+
+`2026-EROLLGEN-S06-69-SIR-FinalRoll-Revision1-GUJ-1-WI.pdf`
+
+Use the uploaded sample as a real test document. Do not hardcode these expected values as the result for every uploaded PDF.
+
+### Test 1 — Document Inspection
+
+The sample PDF has 36 pages.
+
+Verify that the application detects the actual page count and preserves the original filename.
+
+### Test 2 — Vibhag Information
+
+Where the sample page displays the heading containing:
+
+`69 - રાજકોટ પશ્ચિમ`
+
+verify that the extracted metadata is:
+
+- વિભાગ નંબર: `69`
+- વિભાગનું નામ: `રાજકોટ પશ્ચિમ`
+
+The exported Vibhag name must remain in Gujarati.
+
+### Test 3 — Bhag Information
+
+When the sample heading displays:
+
+`ભાગ નંબર : 1`
+
+verify that:
+
+- ભાગ નંબર = `1`
+- વિભાગ નંબર remains `69`
+- વોર્ડ નંબર is populated only if an actual Ward number is explicitly available.
+
+Do not confuse these three fields.
+
+### Test 4 — Non-Voter Pages
+
+The first page includes electoral-roll summary information, and the second page includes map or polling-station information.
+
+Do not generate individual voter records from those sections when they contain no voter cards.
+
+### Test 5 — Page Containing 30 Voter Cards
+
+The third page of the supplied sample visibly contains 30 individual voter cards with serial numbers 1 through 30.
+
+The application must attempt to extract all 30 voter cards as separate records.
+
+Verify the serial number, EPIC number, Gujarati voter name, relationships, age, gender, and other readable fields for each card.
+
+If a card's information cannot be extracted confidently, report it for review. Do not silently skip the card.
+
+### Test 6 — Gujarati Output
+
+Download the Excel file and verify that voter names and relative names extracted from Gujarati cards remain in Gujarati script.
+
+Verify that the worksheet name, column headings, verification values, and warning messages are in Gujarati.
+
+EPIC numbers, original filenames, and appropriate numeric values must remain unchanged.
+
+### Test 7 — Multiple PDFs
+
+Upload PDFs with different Vibhag numbers, Bhag numbers, names, and filenames.
+
+Verify that all successfully extracted voter records are combined into one master worksheet with the correct source metadata.
+
+### Test 8 — Missing Information
+
+Verify that incomplete or unreadable fields remain blank and receive Gujarati warnings.
+
+### Test 9 — Duplicate Detection
+
+Upload documents containing a repeated EPIC number.
+
+Verify that possible duplicates are flagged without automatically deleting or merging original records.
+
+### Test 10 — Recovery
+
+Interrupt a large processing job and resume it.
+
+Verify that completed records are not duplicated and that failed pages can be retried.
+
+### Test 11 — Excel File Integrity
+
+Download and reopen the actual `.xlsx` file.
+
+Verify that the workbook contains the exact 20 Gujarati columns, all successfully extracted records, preserved Gujarati text, source filenames, page numbers, and manual corrections.
+
+### Test 12 — End-to-End Completion
+
+Process a representative batch of multiple PDFs from upload through Excel download.
+
+Confirm that real PDFs are actually read and their records are saved. Do not pass the test merely because the interface displays a completed status.
+
+# 16. User Interface Requirements
+
+Create a clean, practical, professional interface with a clear workflow:
+
+1. PDF Upload
+2. File Validation
+3. Extraction Settings
+4. Processing Dashboard
+5. Master Data Preview
+6. Error and Review Management
+7. Master Excel Download
+
+Use Gujarati labels for primary user-facing controls wherever practical.
+
+The application must be easy to use without requiring the user to understand programming or manually handle each PDF.
+
+Use clear status messages for completed, processing, pending review, and failed tasks.
+
+Avoid nonfunctional buttons, fake progress bars, sample-only data, and misleading completion messages.
+
+# 17. Final Development Instructions
+
+Build the actual working application now.
+
+Prioritize these requirements in this order:
+
+1. Correct extraction of every individual voter.
+2. Gujarati-language names and data.
+3. Correct Vibhag number and Vibhag name from the page header.
+4. Correct separation of Vibhag, Bhag, Ward, and voter serial numbers.
+5. Complete source filename and page-number tracking.
+6. Reliable processing of 1,000+ PDFs in manageable batches.
+7. One consolidated Gujarati Master Excel worksheet.
+8. Accurate duplicate detection, error reporting, and recovery.
+9. Human verification and manual corrections.
+10. A dependable downloadable Excel file.
+
+Do not stop after displaying the interface.
+
+Implement the upload process, actual PDF reading, Gujarati text extraction, voter-card detection, record validation, bulk queue, persistent checkpoints, master-data table, manual review, and Excel export.
+
+Do not remove or replace already working functionality when fixing a bug. Make targeted changes and retest the existing workflow.
+
+When a feature cannot be implemented reliably within the available environment, clearly report the limitation and the actual setup required. Never pretend an unimplemented feature is working.
+
+The final success condition is simple: I can upload my 1,000+ Gujarati voter PDFs, process all readable voter cards with proper error reporting, review questionable entries, and download one consolidated Excel workbook containing the 20 requested columns with voter data in Gujarati and complete source traceability.
